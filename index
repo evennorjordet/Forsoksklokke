@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nedtelling</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #111827;
+    color: #f3f4f6;
+    padding: 24px;
+    transition: background 0.3s ease;
+  }
+  body.warning {
+    background: #78350f;
+  }
+  body.done {
+    background: #7f1d1d;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: #9ca3af;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 40px;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  button {
+    padding: 18px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    border: 3px solid transparent;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  button:hover { background: #1d4ed8; }
+  button:active { transform: scale(0.96); }
+
+  button.selected {
+    background: #1e3a8a;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.35);
+    transform: scale(1.04);
+  }
+  button.selected::after {
+    content: " ●";
+    color: #93c5fd;
+  }
+
+  .display {
+    font-size: 5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    min-height: 6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f3f4f6;
+    transition: color 0.2s ease;
+  }
+  .display.warning {
+    color: #fde047;
+    text-shadow: 0 0 30px rgba(253, 224, 71, 0.8);
+  }
+  .display.done {
+    color: #fecaca;
+    text-shadow: 0 0 40px rgba(255, 255, 255, 0.9);
+  }
+
+  .status {
+    font-size: 1.4rem;
+    font-weight: 800;
+    min-height: 2rem;
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+  .status.warning {
+    color: #fde047;
+  }
+  .status.done {
+    color: #ffffff;
+    font-size: 2rem;
+  }
+</style>
+</head>
+<body>
+
+  <h1>Velg nedtelling</h1>
+
+  <div class="buttons">
+    <button onclick="startCountdown(60, this)">1 min</button>
+    <button onclick="startCountdown(120, this)">2 min</button>
+    <button onclick="startCountdown(180, this)">3 min</button>
+    <button onclick="startCountdown(300, this)">5 min</button>
+  </div>
+
+  <div id="display" class="display">--:--</div>
+  <div id="status" class="status"></div>
+
+  <script>
+    let timerId = null;
+    let remaining = 0;
+
+    const displayEl = document.getElementById('display');
+    const statusEl = document.getElementById('status');
+    const bodyEl = document.body;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function resetVisualState() {
+      displayEl.classList.remove('warning', 'done');
+      statusEl.classList.remove('warning', 'done');
+      bodyEl.classList.remove('warning', 'done');
+      statusEl.textContent = '';
+    }
+
+    let selectedButton = null;
+
+    function startCountdown(seconds, btn) {
+      // Fjern forrige nedtelling hvis den kjører
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      resetVisualState();
+
+      // Marker valgt knapp
+      if (selectedButton) {
+        selectedButton.classList.remove('selected');
+      }
+      selectedButton = btn;
+      if (selectedButton) {
+        selectedButton.classList.add('selected');
+      }
+
+      remaining = seconds;
+      displayEl.textContent = formatTime(remaining);
+
+      timerId = setInterval(() => {
+        remaining--;
+
+        if (remaining > 0) {
+          displayEl.textContent = formatTime(remaining);
+
+          if (remaining <= 15) {
+            displayEl.classList.add('warning');
+            statusEl.classList.add('warning');
+            bodyEl.classList.add('warning');
+            statusEl.textContent = '⚠️ KUN ' + remaining + ' SEKUNDER IGJEN! ⚠️';
+          }
+        } else {
+          // Tiden er ute
+          clearInterval(timerId);
+          timerId = null;
+          displayEl.textContent = '00:00';
+          displayEl.classList.remove('warning');
+          displayEl.classList.add('done');
+          statusEl.classList.remove('warning');
+          statusEl.classList.add('done');
+          bodyEl.classList.remove('warning');
+          bodyEl.classList.add('done');
+          statusEl.textContent = '⏰ TIDEN ER UTE! ⏰';
+          if (selectedButton) {
+            selectedButton.classList.remove('selected');
+          }
+          selectedButton = null;
+        }
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>
